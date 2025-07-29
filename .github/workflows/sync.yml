@@ -1,4 +1,4 @@
- name: Sync WeRead to Notion
+name: Sync WeRead to Notion
 
 on:
   schedule:
