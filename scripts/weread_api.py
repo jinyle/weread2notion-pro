@@ -17,11 +17,14 @@ WEREAD_BOOK_INFO = "https://i.weread.qq.com/book/info"
 WEREAD_READDATA_DETAIL = "https://i.weread.qq.com/readdata/detail"
 WEREAD_HISTORY_URL = "https://i.weread.qq.com/readdata/summary?synckey=0"
 
-class WeReadApi:
+class WereadApi:
     def __init__(self):
-        self.cookie = self.get_cookie()
-        self.session = requests.Session()
-        self.session.cookies = self.parse_cookie_string()
+        self.token = os.getenv('WR_TOKEN')
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Authorization': f'Bearer {self.token}',
+            'Referer': 'https://weread.qq.com/'
+        }
 
 
     def try_get_cloud_cookie(self,url, id, password):
