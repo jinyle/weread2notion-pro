@@ -1,0 +1,36 @@
+name: Token Expiration Reminder
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"  # 每周一北京时间16:00运行
+
+jobs:
+  reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Token Status
+        env:
+          WR_TOKEN: ${{ secrets.WR_TOKEN }}
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+                 -H "Authorization: Bearer $WR_TOKEN" \
+                 -H "Referer: https://weread.qq.com/" \
+                 "https://i.weread.qq.com/user/notebooks")
+          
+          if [ "$response" -eq 403 ]; then
+            echo "TOKEN_EXPIRED=true" >> $GITHUB_ENV
+          else
+            echo "TOKEN_EXPIRED=false" >> $GITHUB_ENV
+          fi
+          
+      - name: Create Issue if Token Expired
+        if: env.TOKEN_EXPIRED == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "⚠️ 微信读书 Token 已过期",
+              body: "您的微信读书 Token 已失效，请重新获取并更新 WR_TOKEN Secret：\n\n1. 登录微信读书网页版\n2. 按 F12 打开开发者工具\n3. 在 Console 执行: `document.cookie.split(';').find(c => c.includes('wr_'))`\n4. 复制类似 `wr_skey=ABCDEF` 中的 ABCDEF 部分\n5. 到仓库 Settings > Secrets 更新 WR_TOKEN"
+            })
